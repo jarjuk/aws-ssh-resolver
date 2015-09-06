@@ -38,6 +38,7 @@ describe Cli do
                   :options => [
                                { :long=>"--log", :short => "-l"},
                                { :long=>"--ssh-config-file", :short => "-c"},
+                               { :long=>"--ssh-config-init", :short => "-i"},
                               ]
                 },
                 {
@@ -48,16 +49,16 @@ describe Cli do
                               ]
                 },
                 {
-                  :command => "aws-cli",
+                  :command => "aws",
                   :options => [
                                { :long=>"--log", :short => "-l"},
                                { :long=>"--ssh-config-file", :short => "-c"},
                                { :long=>"--describe-instances", :short => "-d"},
+                               { :long=>"--ssh-config-init", :short => "-i"},
                               ]
                 }
                ]
     
-
   interfaces.each do |i|
 
     describe "help #{i[:command]}" do
@@ -116,9 +117,8 @@ describe Cli do
 
         before :each do
           @ssh_config_file_lines= [ "line 1", "line2" ]
-          expect( File ).to receive( :exist? ).with( ssh_config_filename).and_return( true )
+          expect( File ).to receive( :exist? ).twice.with( ssh_config_filename).and_return( true )
         end
-
 
         context "when NO previous resolves" do
 

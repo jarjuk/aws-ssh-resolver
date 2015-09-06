@@ -21,6 +21,21 @@ task :usage do
   puts "(type rake -T for more detail)\n\n"
 end
 
+# ------------------------------------------------------------------
+# Internal development
+
+begin
+
+  require "raketools_site.rb"
+  require "raketools_release.rb"
+rescue LoadError
+  # puts ">>>>> Raketools not loaded, omitting tasks"
+end
+
+def version() 
+  # gemspec wants to use 'pre' and not '-SNAPSHOT'
+  return File.open( "VERSION", "r" ) { |f| f.read }.strip.gsub( "-SNAPSHOT", ".pre" )   # version number from file
+end
 
 # ------------------------------------------------------------------
 # dev.workflow defined here

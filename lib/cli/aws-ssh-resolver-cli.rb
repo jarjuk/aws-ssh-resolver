@@ -10,6 +10,7 @@ class Cli < Thor
   # ------------------------------------------------------------------
   # constanst
   DEFAULT_SSH_CONFIG_FILE     = "ssh/config.aws"
+  DEFAULT_SSH_CONFIG_INIT     = "ssh/config.init"
   MAGIC_START                 = "# +++ aws-ssh-resolver-cli update start here +++"
   MAGIC_END                   = "# +++ aws-ssh-resolver-cli update end here +++"
   DEFAULT_DESCRIBE_INSTANCES  = "aws ec2 describe-instances --filters 'Name=tag-key,Values=Name'"
@@ -52,10 +53,23 @@ class Cli < Thor
   add_shared_option :ssh_config_file, :type => :string, :default => DEFAULT_SSH_CONFIG_FILE, :aliases => "-c",
   :desc => "OpenSSH config file to update/create"
 
+  add_shared_option :ssh_config_init, :type => :string, :default => DEFAULT_SSH_CONFIG_INIT, :aliases => "-i",
+  :desc => "Initialize :ssh-config-file files with this file"
+
 
   add_shared_option :describe_instances, :type => :string, :default => DEFAULT_DESCRIBE_INSTANCES, :aliases => "-d",
   :desc => "aws command to query ec2 instances"
 
+
+  # ------------------------------------------------------------------
+  # common instruction
+  long_desc_notice_on_ssh_config_init = <<-EOS
+
+     NOTICE: By default ':ssh-config-file' seeded from ':ssh-config-init',
+     if it does not exist. Create an empty ':ssh-config-init' file, or 
+     pass an empty string to ':ssh-config-init' to avoid an error. 
+
+  EOS
 
 
   # ------------------------------------------------------------------
@@ -72,15 +86,18 @@ class Cli < Thor
      Entries in ':ssh_config_file' start and end with special tag-lines, which allow the tool
      to replace host/hostanme entries with new values for each run.
 
+     #{long_desc_notice_on_ssh_config_init}
+
   LONGDESC
 
   shared_options :ssh_config_file
+  shared_options :ssh_config_init
 
   def resolve( json_file="-" )
 
     @logger.info( "#{__method__} starting, options '#{options}'" )
 
-
+    ssh_config_init = options[:ssh_config_init]
     ssh_config_file = options[:ssh_config_file]
     # puts( "options=#{options}" )
 
@@ -90,6 +107,9 @@ class Cli < Thor
     # hash with host => hostname
     host_hostname_mappings = create_host_hostname_mappings( ec2_instances )
 
+    # seed  'ssh_config_file' with 'ssh_config_init'
+    init_ssh_config_file( ssh_config_file, ssh_config_init )
+
     # output to file
     output_to_file(  ssh_config_file, host_hostname_mappings )
 
@@ -98,22 +118,25 @@ class Cli < Thor
 
   # ------------------------------------------------------------------
   # aws-cli
-  desc "aws_cli", "Create/update OpenSSH config file with AWS HostNames using aws Commad Line query"
+  desc "aws", "Create/update OpenSSH config file with AWS HostNames using aws Commad Line query"
 
   long_desc <<-LONGDESC
  
-       Use aws Command Line Interface to query ec2 information and parse host/hostname 
-       information update/create ':ssh_config_file'.
+     Uses `aws` Command Line Interface to query ec2 information and parse host/hostname 
+     information update/create ':ssh_config_file'.
 
+     #{long_desc_notice_on_ssh_config_init}
 
   LONGDESC
 
   shared_options :ssh_config_file
+  shared_options :ssh_config_init
   shared_options :describe_instances
 
-  def aws_cli()
+  def aws()
 
     ssh_config_file = options[:ssh_config_file]
+    ssh_config_init = options[:ssh_config_init]
     describe_instances = options[:describe_instances]
 
     # run aws-cli query
@@ -121,6 +144,9 @@ class Cli < Thor
 
     # hash with host => hostname
     host_hostname_mappings = create_host_hostname_mappings( ec2_instances )
+
+    # seed  'ssh_config_file' with 'ssh_config_init'
+    init_ssh_config_file( ssh_config_file, ssh_config_init )
 
     # output to file
     output_to_file(  ssh_config_file, host_hostname_mappings )
@@ -220,8 +246,8 @@ class Cli < Thor
       return host_hostname_mappings
     end
 
+    # add 'host_hostname_mappings' to 'ssh_config_file'
     def output_to_file( ssh_config_file, host_hostname_mappings ) 
-
 
       # Read content of (without magic content) ssh_config_file into memory
       ssh_config_file_content = read_ssh_config_file_content_minus_magic( ssh_config_file )
@@ -254,6 +280,13 @@ EOS
 
       end
 
+    end
+
+    # copy 'ssh_config_init' to 'ssh_config_file' - if it does not
+    # exist && 'ssh_config_init' define
+    def init_ssh_config_file( ssh_config_file, ssh_config_init ) 
+      File.open( ssh_config_file, 'w') { |f| f.write(File.read(ssh_config_init )) } if !File.exist?( ssh_config_file ) && 
+        ssh_config_init && !ssh_config_init.empty?
     end
 
     # read ssh_config from file/$stdin, remove old magic
