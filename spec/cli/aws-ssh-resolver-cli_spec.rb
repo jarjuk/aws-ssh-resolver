@@ -128,7 +128,7 @@ describe Cli do
 
           it "writes existing lines to ssh-config file" do
             expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_START ).ordered
-            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( /^host\s+\w+\s*\n\s*HostName\s+\w?/ ).ordered
+            expect( @dbl_ssh_config_file ).to receive( :puts ).twice.with( /^host\s+\w+\s*\n\s*HostName\s+\w?/ ).ordered
             expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_END ).ordered
 
             @ssh_config_file_lines.each do |line|
@@ -150,7 +150,7 @@ describe Cli do
           it "removes previous lines between MAGIC_START - MAGIC_END " do
 
             expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_START ).ordered
-            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( /^host\s+\w+\s*\n\s*HostName\s+\w?/ ).once.ordered
+            expect( @dbl_ssh_config_file ).to receive( :puts ).with( /^host\s+\w+\s*\n\s*HostName\s+\w?/ ).twice.ordered
             expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_END ).ordered
 
             @ssh_config_file_lines.each do |line|

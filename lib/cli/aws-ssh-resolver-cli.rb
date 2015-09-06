@@ -211,10 +211,10 @@ class Cli < Thor
     def create_host_hostname_mappings( ec2_instances ) 
       host_hostname_mappings = ec2_instances['Reservations']
         .map{ |i| i['Instances'].first }        
-        .select { |i| !i['PublicDnsName'].nil? && !i['PublicDnsName'].empty? }
         .map{ |i|   { 
           :Host => i['Tags'].select{ |t| t['Key'] == 'Name'}.first['Value'],
-          :PublicDnsName => i['PublicDnsName']  } }
+          :HostName => i['PublicDnsName'] && !i['PublicDnsName'].empty? ? i['PublicDnsName'] : i['PrivateDnsName']
+        } }
 
       @logger.info( "#{__method__} host_hostname_mappings '#{host_hostname_mappings}'" )
       return host_hostname_mappings
@@ -239,7 +239,7 @@ class Cli < Thor
         host_hostname_mappings.each do |h|
           host_entry = <<EOS
 host #{h[:Host]}
-    HostName #{h[:PublicDnsName]}
+    HostName #{h[:HostName]}
 
 
 EOS
