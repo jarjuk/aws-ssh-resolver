@@ -32,75 +32,130 @@ describe Cli do
 
   # ------------------------------------------------------------------
   # help && options
+  interfaces = [
+               {
+                 :command => "resolve",
+                 :options => [
+                              { :long=>"--log", :short => "-l"},
+                              { :long=>"--ssh-config-file", :short => "-c"},
+                             ]
+               },
+              ]
+    
 
-  describe "help and options" do
+  interfaces.each do |i|
 
-    command =  "help"
+    describe "help #{i[:command]}" do
 
-    describe "common options" do
-      
       before :all do
-        @output = with_captured_stdout { Cli.start([command]) }
+        @output = with_captured_stdout { Cli.start(["help", i[:command]]) }
       end
 
-      it "#Options" do
-        expect( @output ).to match( /Options/ )
-      end
+      i[:options].each do |o|
 
-      it "#outputs -l --log" do
-        expect( @output ).to match( /-l.*--log=/ )
-      end
+        it "#option short #{o[:short]}" do
+          expect( @output ).to match( /#{o[:short]}/ )
+        end
+
+        it "#option short #{o[:long]}" do
+          expect( @output ).to match( /#{o[:long]}/ )
+        end
+
+
+      end # options
 
     end
 
-    # --------------------
-    # resolve
-    describe "resolve" do
+  end # interfaces each
 
-      task = "resolve"
-
-      before :all do
-        @output = with_captured_stdout { Cli.start([command, task]) }
-      end
-
-      it "#outputs usage for task" do
-        expect( @output ).to match( /Usage:\n.*#{task}/ )
-      end
-
-      it "#option --log/-l" do
-        expect( @output ).to match( /-l.*--log=/ )
-      end
-
-      it "#option ssh-config-file/c" do
-        expect( @output ).to match( /-c.*--ssh-config-file=/ )
-      end
-
-    end
-
-  end
 
   # ------------------------------------------------------------------
   # resolve
+  command =  "resolve"
 
-  describe "resolve" do
-
-    command =  "resolve"
-
+  describe "command '#{command}'" do
 
     context  "file" do
 
-      file = "spec/cli/fixtures/fixture1.json"
+      json_file = "spec/cli/fixtures/fixture1.json"
 
-      before :all do
-        @dbl_file = double( "file" )
-      end
+      ssh_config_filename = Cli::DEFAULT_SSH_CONFIG_FILE
 
-      it "#works" do
-        expect( File ).to receive( :open ).with( Cli::DEFAULT_SSH_CONFIG_FILE, "w").and_return( @dbl_file )
-        expect( File ).to receive( :read ).with( file ).and_call_original
-        Cli.start([command, file])
-        expect( 1 ).to eql( 1 )
+      before :each do
+        @dbl_ssh_config_file = double( "ssh-config-file" )
+        expect( File ).to receive( :open ).with( ssh_config_filename, "w").and_yield( @dbl_ssh_config_file )
+        allow( @dbl_ssh_config_file ).to receive( :puts ).with( kind_of( String ))
       end
+       
+
+      context "when ':ssh-config-file' does not exist" do
+
+        before :each do
+          expect( File ).to receive( :exist? ).with( ssh_config_filename).and_return( false )
+          expect( File ).no_to receive( :readlines? ).with( ssh_config_filename )
+        end
+        
+      end # context "when ':ssh-config-file' does not exist" do
+
+      context "when ':ssh-config-file' does exists" do
+
+        before :each do
+          @ssh_config_file_lines= [ "line 1", "line2" ]
+          expect( File ).to receive( :exist? ).with( ssh_config_filename).and_return( true )
+        end
+
+
+        context "when NO previous resolves" do
+
+          before :each do
+            expect( File ).to receive( :readlines ).with( ssh_config_filename).and_return( @ssh_config_file_lines )
+          end
+
+          it "writes existing lines to ssh-config file" do
+            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_START ).ordered
+            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( /^host\s+\w+\s*\n\s*HostName\s+\w?/ ).ordered
+            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_END ).ordered
+
+            @ssh_config_file_lines.each do |line|
+              expect( @dbl_ssh_config_file ).to receive( :puts ).with( line ).ordered
+            end
+
+            Cli.start( [command, json_file] )
+          end
+
+        end # context "when NO previous resolves" 
+
+        context "when previous resolves" do
+
+          before :each do
+            content = [ Cli::MAGIC_START, "old magic", Cli::MAGIC_END ] + @ssh_config_file_lines 
+            expect( File ).to receive( :readlines ).with( ssh_config_filename).and_return( content )
+          end
+
+          it "removes previous lines between MAGIC_START - MAGIC_END " do
+
+            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_START ).ordered
+            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( /^host\s+\w+\s*\n\s*HostName\s+\w?/ ).once.ordered
+            expect( @dbl_ssh_config_file ).to receive( :puts ).once.with( Cli::MAGIC_END ).ordered
+
+            @ssh_config_file_lines.each do |line|
+              expect( @dbl_ssh_config_file ).to receive( :puts ).with( line ).ordered
+            end
+
+            Cli.start( [command, json_file] )
+          end
+
+
+        end  
+
+      end # context "when ':ssh-config-file' does exists" do
+
+
+      # it "#writes to file" do
+      #   
+      #   expect( File ).to receive( :read ).with( file ).and_call_original
+      #   expect( 1 ).to eql( 1 )
+      # end
 
     end #     context  "file" do
 

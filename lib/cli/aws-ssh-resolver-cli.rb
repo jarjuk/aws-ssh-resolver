@@ -10,6 +10,8 @@ class Cli < Thor
   # ------------------------------------------------------------------
   # constanst
   DEFAULT_SSH_CONFIG_FILE = "ssh/config.aws"
+  MAGIC_START             = "# +++ aws-ssh-resolver-cli update start here +++"
+  MAGIC_END               = "# +++ aws-ssh-resolver-cli update end here +++"
 
   # # ------------------------------------------------------------------
 
@@ -56,16 +58,9 @@ class Cli < Thor
     # hash with host => hostname
     host_hostname_mappings = create_host_hostname_mappings( ec2_instances )
 
-    File.open( ssh_config_file, 'w') do |f2|
-      host_hostname_mappings.each do |h|
-        f2.puts <<-EOS
-        host #{h[:Host]}
-              HostName #{h[::PublicDnsName]}
-        EOS
-      end
-      #   # use "\n" for two lines of text  
-      #   f2.puts "Created by Satish\nThank God!"  
-    end 
+    # output to file
+    output_to_file(  ssh_config_file, host_hostname_mappings )
+
     
   end
 
@@ -95,6 +90,61 @@ class Cli < Thor
           :PublicDnsName => i['PublicDnsName']  } }
 
       @logger.info( "#{__method__} host_hostname_mappings '#{host_hostname_mappings}'" )
+      return host_hostname_mappings
+    end
+
+    def output_to_file( ssh_config_file, host_hostname_mappings ) 
+
+
+      # Read content of ssh_config_file into memory
+      ssh_config_file_content = File.exist?( ssh_config_file ) ? File.readlines( ssh_config_file ) : []
+
+      # remove old magic
+      within_magic = false
+      ssh_config_file_content = ssh_config_file_content.select do |line| 
+        ret = case within_magic 
+              when true
+                if line.chomp == MAGIC_END then
+                  within_magic = false
+                end
+                false
+              when false
+                if line.chomp == MAGIC_START  then
+                  within_magic = true
+                end
+                (line.chomp == MAGIC_START ? false : true)
+              end
+        ret
+      end
+
+      # write new magic with host entries
+      File.open( ssh_config_file, 'w') do |f2|
+
+        f2.puts MAGIC_START
+        f2.puts <<-EOS
+
+# Content generated #{Time.now.strftime("%Y-%m-%d-%H:%M:%S")}
+
+        EOS
+
+        host_hostname_mappings.each do |h|
+          host_entry = <<EOS
+host #{h[:Host]}
+    HostName #{h[:PublicDnsName]}
+
+
+EOS
+          f2.puts  host_entry
+        end
+
+        f2.puts MAGIC_END
+        
+        ssh_config_file_content.each do |line|
+          f2.puts line
+        end
+
+      end
+
     end
 
   end # no_task

@@ -10,6 +10,7 @@ task :default => [:usage]
 
 
 gem = "aws-ssh-resolver"
+document_dir="generated-docs"
 
 # ------------------------------------------------------------------
 # usage 
@@ -31,14 +32,16 @@ namespace "dev" do |ns|
 
   namespace :rspec do |ns|
 
+
     task :lib, :rspec_opts  do |t, args|
       args.with_defaults(:rspec_opts => "")
       sh "bundle exec rspec --format documentation spec/lib"
     end
 
     task :cli, :rspec_opts  do |t, args|
+      document_file = "#{document_dir}/cli.txt"
       args.with_defaults(:rspec_opts => "")
-      sh "bundle exec rspec --format documentation spec/cli"
+      sh "bundle exec rspec --format documentation --out #{document_file} spec/cli"
     end
 
     task :guard do
