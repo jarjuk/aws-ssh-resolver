@@ -9,10 +9,10 @@ class Cli < Thor
 
   # ------------------------------------------------------------------
   # constanst
-  DEFAULT_SSH_CONFIG_FILE = "ssh/config.aws"
-  MAGIC_START             = "# +++ aws-ssh-resolver-cli update start here +++"
-  MAGIC_END               = "# +++ aws-ssh-resolver-cli update end here +++"
-
+  DEFAULT_SSH_CONFIG_FILE     = "ssh/config.aws"
+  MAGIC_START                 = "# +++ aws-ssh-resolver-cli update start here +++"
+  MAGIC_END                   = "# +++ aws-ssh-resolver-cli update end here +++"
+  DEFAULT_DESCRIBE_INSTANCES  = "aws ec2 describe-instances --filters 'Name=tag-key,Values=Name'"
 
   # ------------------------------------------------------------------
   # constructore
@@ -53,11 +53,15 @@ class Cli < Thor
   :desc => "OpenSSH config file to update/create"
 
 
+  add_shared_option :describe_instances, :type => :string, :default => DEFAULT_DESCRIBE_INSTANCES, :aliases => "-d",
+  :desc => "aws command to query ec2 instances"
+
+
 
   # ------------------------------------------------------------------
   # resolver
 
-  desc "resolve <json-file>", "Create/update OpenSSH config file with AWS HostNames"
+  desc "resolve <json-file>", "Create/update OpenSSH config file with AWS HostNames from a JSON document"
 
 
   long_desc <<-LONGDESC
@@ -90,6 +94,37 @@ class Cli < Thor
     output_to_file(  ssh_config_file, host_hostname_mappings )
 
     
+  end
+
+  # ------------------------------------------------------------------
+  # aws-cli
+  desc "aws_cli", "Create/update OpenSSH config file with AWS HostNames using aws Commad Line query"
+
+  long_desc <<-LONGDESC
+ 
+       Use aws Command Line Interface to query ec2 information and parse host/hostname 
+       information update/create ':ssh_config_file'.
+
+
+  LONGDESC
+
+  shared_options :ssh_config_file
+  shared_options :describe_instances
+
+  def aws_cli()
+
+    ssh_config_file = options[:ssh_config_file]
+    describe_instances = options[:describe_instances]
+
+    # run aws-cli query
+    ec2_instances = aws_cli_ec2_instances( describe_instances )
+
+    # hash with host => hostname
+    host_hostname_mappings = create_host_hostname_mappings( ec2_instances )
+
+    # output to file
+    output_to_file(  ssh_config_file, host_hostname_mappings )
+
   end
 
   # ------------------------------------------------------------------
@@ -134,16 +169,43 @@ class Cli < Thor
   no_commands do
 
     # return raw ec2 describe-status JSON
+    def aws_cli_ec2_instances( describe_instances ) 
+
+      @logger.info( "#{__method__} describe_instances '#{describe_instances}'" )
+
+      json_string = %x{ #{describe_instances} }
+      ec2_instances = parse_json( json_string )
+
+      @logger.debug( "#{__method__} describe_instances '#{describe_instances}' --> #{ec2_instances}" )
+
+      return ec2_instances
+
+    end
+
+
+    # return raw ec2 describe-status JSON
     def get_ec2_instances( file ) 
 
       @logger.info( "#{__method__} read file '#{file}'" )
 
-      ec2_instances = JSON.parse( file == "-" ? $stdin.readlines.join :  File.read(file) )
+      json_string =  ( file == "-" ? $stdin.readlines.join :  File.read(file) )
+      ec2_instances = parse_json( json_string )
 
       @logger.debug( "#{__method__} file '#{file}' --> #{ec2_instances}" )
       return ec2_instances
 
     end
+
+    def parse_json( json_string ) 
+
+      @logger.debug( "#{__method__} json_string '#{json_string}'" )
+
+      ec2_instances = JSON.parse( json_string  )
+
+      return ec2_instances
+
+    end
+
 
     # map raw aws ec2-describe-status json to hash with Host/PublicDnsName props
     def create_host_hostname_mappings( ec2_instances ) 

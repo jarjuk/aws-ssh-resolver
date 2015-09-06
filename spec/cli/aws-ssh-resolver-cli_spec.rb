@@ -33,21 +33,29 @@ describe Cli do
   # ------------------------------------------------------------------
   # help && options
   interfaces = [
-               {
-                 :command => "resolve",
-                 :options => [
-                              { :long=>"--log", :short => "-l"},
-                              { :long=>"--ssh-config-file", :short => "-c"},
-                             ]
-               },
-               {
-                 :command => "reset",
-                 :options => [
-                              { :long=>"--log", :short => "-l"},
-                              { :long=>"--ssh-config-file", :short => "-c"},
-                             ]
-               },
-              ]
+                {
+                  :command => "resolve",
+                  :options => [
+                               { :long=>"--log", :short => "-l"},
+                               { :long=>"--ssh-config-file", :short => "-c"},
+                              ]
+                },
+                {
+                  :command => "reset",
+                  :options => [
+                               { :long=>"--log", :short => "-l"},
+                               { :long=>"--ssh-config-file", :short => "-c"},
+                              ]
+                },
+                {
+                  :command => "aws-cli",
+                  :options => [
+                               { :long=>"--log", :short => "-l"},
+                               { :long=>"--ssh-config-file", :short => "-c"},
+                               { :long=>"--describe-instances", :short => "-d"},
+                              ]
+                }
+               ]
     
 
   interfaces.each do |i|
