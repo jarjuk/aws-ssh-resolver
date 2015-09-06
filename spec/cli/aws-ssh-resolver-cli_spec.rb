@@ -40,6 +40,13 @@ describe Cli do
                               { :long=>"--ssh-config-file", :short => "-c"},
                              ]
                },
+               {
+                 :command => "reset",
+                 :options => [
+                              { :long=>"--log", :short => "-l"},
+                              { :long=>"--ssh-config-file", :short => "-c"},
+                             ]
+               },
               ]
     
 
