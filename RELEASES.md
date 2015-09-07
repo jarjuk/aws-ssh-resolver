@@ -1,4 +1,7 @@
 ## 0.0.2-SNAPSHOT/20150907-13:25:57
+
+* Documentation changes
+
 ## 0.0.1/20150907-13:25:49
 
 * fist version
