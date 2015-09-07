@@ -19,14 +19,17 @@ Gem::Specification.new do |s|
   Update OpenSSH config file to map EC2 instance name in CloudFormation
   to DNS-name on Amazon platform.
 EOF
+
   s.authors         = ["jarjuk"]
-  s.files           = ["README.md"] | Dir.glob("lib/**/*")  |  Dir.glob("spec/**/*")  | Dir.glob("bin/**/*") 
-  # s.require_paths   = [ "lib" ]
-  s.license       = 'MIT'
+  s.require_paths   = [ "lib" ]
+  s.license         = 'MIT'
 
 
   s.homepage        = "https://github.com/jarjuk/aws-ssh-resolver"
+  s.files           = ["README.md"] | Dir.glob("lib/**/*")  |  Dir.glob("spec/**/*")  | Dir.glob("bin/**/*") 
+
   s.bindir          = 'bin'
+  s.executables     = [ "aws-ssh-resolver.rb" ]
 
   s.required_ruby_version = '~> 2'
 
