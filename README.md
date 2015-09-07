@@ -6,27 +6,30 @@ OpenSSH, and related tools, on Amazon Platform.
 
 ## The Problem
 
-[Amazon EC2 Instance IP Addressing](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html)
-  documents, how every EC2 instance is associated a private IP, which
-  cannot be reached directly from the Internet. Together with the
-  Private IP comes also a DNS hostname, which can be resolved only on
-  the network that the instance is in.  An instance may be assigned a
-  Public IP Address, accessible from the Internet, and a corresponding
-  Public DNS name, resolvable outside the network of the instance.
-  Public IPs come from Amazon's pool of public IP address, and an
-  instance may not reuse the IP address, once it is released. For
-  example, stopping, or terminating, an instance releases the Public
-  IP Address.
+Every EC2 instance on Amazon platform has a Private IP address, and a
+DNS hostname resolving to this address. Private IP cannot be reached
+directly from the Internet, and the Private DNS name can be resolved
+only on the network that the instance is in. An instance may be
+assigned a Public IP Address, and corresponding Public DNS name.  The
+Public IP is accessible from the Internet, and the Public DNS name is
+resolvable outside the network of the instance.  Public IPs come from
+Amazon's pool of public IP address, and an instance may not reuse the
+IP address, once it is released. For example, stopping, or
+terminating, an instance releases the Public IP Address. See Amazon
+[documentation](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html)
+for more details.
 
-Amazon EC2 Instance IP Addressing brings along several challenges for
-SSH users, or any SSH related tool e.g.
+
+Amazon EC2 Instance IP Addressing presents several challenges for SSH
+usage, or any SSH related tool e.g.
 [ansible](http://www.ansible.com/home),
 [fabric](http://www.fabfile.org/),
 [serverspec](http://serverspec.org/) etc.
 
-* Public DNS Name encodes the Public IP Address. In essence this means
-  that each time an instance is assigned a new IP address, it also
-  gets a new Public DNS name.
+* Public DNS Name encodes the Public IP Address. Each time an instance
+  is assigned a new IP address, it also gets a new Public DNS name, In
+  essence this means that the task of managing DNS names comparable to
+  the task of managing IP addresses.
 
 * Accessing an instance becomes complicated, because Public IP
   Address, once released, cannot be reused. Using fixed IP addresses
@@ -36,7 +39,8 @@ SSH users, or any SSH related tool e.g.
   directly from the Internet.
 
 * Private DNS names also encode the IP address they map to. On top of
-  that, they cannot be resolved outside the cloud network.
+  that, Private DNS names cannot be resolved outside the cloud
+  network.
 
 ## The Solution
 
@@ -81,29 +85,29 @@ file `ssh/config.aws` with any fixed configuration.  Running
 the content user has entered.
 
 **Notice**: If `ssh/config.aws` -file does not exist, the first
- **aws-ssh-resolver** run creates the initial version of
- `ssh/config.aws` automatically using `ssh/config.init`.  This avoids
- the need to check in the mutable `ssh/config.aws` into a version
- control system system.
+**aws-ssh-resolver** run creates the initial version of
+`ssh/config.aws` automatically using `ssh/config.init`. This avoids
+the need to check in the mutable `ssh/config.aws` into a version
+nncontrol system.
 
 ### Update OpenSSH Configuration file
 
-To updates `ssh/config.aws` with `host` entries for EC2 instances pipe
-the result of `aws ec2 describe-instances` to
-**aws-ssh-resolver**. For example
+To update OpenSSH configuration with EC2 Tag/DNS mappings pipe the
+result of `aws ec2 describe-instances` to **aws-ssh-resolver**
+command:
 
 	aws ec2 describe-instances |  bundle exec aws-ssh-resolver.rb resolve
 
-The command above creates host entries in `ssh/config.aws` -file. In
-this file, `host` values are taken from `Name` tags on EC2 instances,
-and `HostName` values are taken from `PublicDnsName` on EC2
-instances. If `PublicDnsName` is not defined, use `PrivateDnsName`
-instead.
+The command create extract EC2 Tag/DNS information, and writes
+`host`/`HostName` configuration entries in `ssh/config.aws` -file.  In
+this file `host` value is taken from `Name` tag on EC2 instance, and
+`HostName` value is taken from `PublicDnsName` on EC2 instances. If
+`PublicDnsName` is not defined, use `PrivateDnsName` instead.
 
 When the network topology changes, i.e. an instance gets a new IP
 address, an instance is terminated, or a new instance is launched,
-rerun the command to update content in `ssh/config.aws` to reflect the
-new situation.
+rerun the command again to update content in `ssh/config.aws` to
+reflect the new situation.
 
 ## An Example
 
@@ -112,13 +116,13 @@ new situation.
 The example uses two Ubuntu EC2 instances with `Name` -tags `myFront`
 and `myBack1`. Instance `myFront` has an internal IP
 `10.0.0.246`. Instances on subnet `10.0.0.0/24` can be reached over
-Internet, and `myFront` has been assigned a public IP 52.19.117.227
+Internet, and `myFront` has been assigned a public IP `52.19.117.227`
 and an externally resolvable DNS name
 `c2-52-19-117-227.eu-west-1.compute.amazonaws.com`. Instance `myBack1`
 belongs to private subnet `10.0.1.0/24`, and cannot reached directly
-from Internet. It has a private IP address 10.0.1.242 with a DNS name
-`ip-10-0-1-242.eu-west-1.compute.internal`. Both of these instances
-have been created using
+from Internet. It has a private IP address `10.0.1.242` with a DNS
+name `ip-10-0-1-242.eu-west-1.compute.internal`. Both of these
+instances have been created using
 [Amazon EC2 Key Pair](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html)
 `demo_key`.
 
