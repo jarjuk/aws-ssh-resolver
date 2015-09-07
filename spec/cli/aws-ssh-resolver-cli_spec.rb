@@ -39,13 +39,7 @@ describe Cli do
                                { :long=>"--log", :short => "-l"},
                                { :long=>"--ssh-config-file", :short => "-c"},
                                { :long=>"--ssh-config-init", :short => "-i"},
-                              ]
-                },
-                {
-                  :command => "reset",
-                  :options => [
-                               { :long=>"--log", :short => "-l"},
-                               { :long=>"--ssh-config-file", :short => "-c"},
+                               { :long=>"--host-tag", :short => "-h"},
                               ]
                 },
                 {
@@ -55,8 +49,16 @@ describe Cli do
                                { :long=>"--ssh-config-file", :short => "-c"},
                                { :long=>"--describe-instances", :short => "-d"},
                                { :long=>"--ssh-config-init", :short => "-i"},
+                               { :long=>"--host-tag", :short => "-h"},
                               ]
-                }
+                },
+                {
+                  :command => "reset",
+                  :options => [
+                               { :long=>"--log", :short => "-l"},
+                               { :long=>"--ssh-config-file", :short => "-c"},
+                              ]
+                },
                ]
     
   interfaces.each do |i|

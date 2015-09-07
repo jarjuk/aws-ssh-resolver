@@ -14,6 +14,7 @@ class Cli < Thor
   MAGIC_START                 = "# +++ aws-ssh-resolver-cli update start here +++"
   MAGIC_END                   = "# +++ aws-ssh-resolver-cli update end here +++"
   DEFAULT_DESCRIBE_INSTANCES  = "aws ec2 describe-instances --filters 'Name=tag-key,Values=Name'"
+  DEFAULT_HOST_TAG            = "Name"
 
   # ------------------------------------------------------------------
   # constructore
@@ -60,6 +61,9 @@ class Cli < Thor
   add_shared_option :describe_instances, :type => :string, :default => DEFAULT_DESCRIBE_INSTANCES, :aliases => "-d",
   :desc => "aws command to query ec2 instances"
 
+  add_shared_option :host_tag, :type => :string, :default => DEFAULT_HOST_TAG, :aliases => "-h",
+  :desc => "Tag defining name of host"
+
 
   # ------------------------------------------------------------------
   # common instruction
@@ -92,11 +96,13 @@ class Cli < Thor
 
   shared_options :ssh_config_file
   shared_options :ssh_config_init
+  shared_options :host_tag
 
   def resolve( json_file="-" )
 
     @logger.info( "#{__method__} starting, options '#{options}'" )
 
+    host_tag        = options[:host_tag]
     ssh_config_init = options[:ssh_config_init]
     ssh_config_file = options[:ssh_config_file]
     # puts( "options=#{options}" )
@@ -105,7 +111,7 @@ class Cli < Thor
     ec2_instances = get_ec2_instances( json_file )
     
     # hash with host => hostname
-    host_hostname_mappings = create_host_hostname_mappings( ec2_instances )
+    host_hostname_mappings = create_host_hostname_mappings( ec2_instances, host_tag )
 
     # seed  'ssh_config_file' with 'ssh_config_init'
     init_ssh_config_file( ssh_config_file, ssh_config_init )
@@ -132,9 +138,11 @@ class Cli < Thor
   shared_options :ssh_config_file
   shared_options :ssh_config_init
   shared_options :describe_instances
+  shared_options :host_tag
 
   def aws()
 
+    host_tag        = options[:host_tag]
     ssh_config_file = options[:ssh_config_file]
     ssh_config_init = options[:ssh_config_init]
     describe_instances = options[:describe_instances]
@@ -143,7 +151,7 @@ class Cli < Thor
     ec2_instances = aws_cli_ec2_instances( describe_instances )
 
     # hash with host => hostname
-    host_hostname_mappings = create_host_hostname_mappings( ec2_instances )
+    host_hostname_mappings = create_host_hostname_mappings( ec2_instances, host_tag )
 
     # seed  'ssh_config_file' with 'ssh_config_init'
     init_ssh_config_file( ssh_config_file, ssh_config_init )
@@ -234,11 +242,15 @@ class Cli < Thor
 
 
     # map raw aws ec2-describe-status json to hash with Host/PublicDnsName props
-    def create_host_hostname_mappings( ec2_instances ) 
+    def create_host_hostname_mappings( ec2_instances, host_tag ) 
+
+      @logger.info( "#{__method__} host_tag '#{host_tag}'" )
+
       host_hostname_mappings = ec2_instances['Reservations']
-        .map{ |i| i['Instances'].first }        
+        .map{ |i| i['Instances'].first }
+        .select{ |i|  i['Tags'].select{ |t| t['Key'] == host_tag }.any? }
         .map{ |i|   { 
-          :Host => i['Tags'].select{ |t| t['Key'] == 'Name'}.first['Value'],
+          :Host => i['Tags'].select{ |t| t['Key'] == host_tag }.first['Value'],
           :HostName => i['PublicDnsName'] && !i['PublicDnsName'].empty? ? i['PublicDnsName'] : i['PrivateDnsName']
         } }
 
