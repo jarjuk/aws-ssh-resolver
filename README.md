@@ -1,4 +1,4 @@
-# aws-ssh-resolver - Resolve AWS EC2 HostNames for OpenSSH - $Release:0.0.1-SNAPSHOT$
+# aws-ssh-resolver - Resolve AWS EC2 HostNames for OpenSSH - $Release:0.0.1$
 
 `aws-ssh-resolver` keeps AWS EC2 HostNames in OpenSSH configuration
 file in sync with Amazon cloud making it easier for a user to use
