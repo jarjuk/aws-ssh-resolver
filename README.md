@@ -13,50 +13,52 @@ OpenSSH, and related tools, on Amazon Platform.
   the network that the instance is in.  An instance may be assigned a
   Public IP Address, accessible from the Internet, and a corresponding
   Public DNS name, resolvable outside the network of the instance.
-  Public IPs come Amazon's pool of public IP address, and an instance
-  may not reuse the IP address, once it is released. For example,
-  stopping, or terminating, an instance releases the Public IP
-  Address.
+  Public IPs come from Amazon's pool of public IP address, and an
+  instance may not reuse the IP address, once it is released. For
+  example, stopping, or terminating, an instance releases the Public
+  IP Address.
 
-Amazon EC2 Instance IP Addressing brings about several challenges for
-SSH users, or any related tool [ansible](http://www.ansible.com/home),
+Amazon EC2 Instance IP Addressing brings along several challenges for
+SSH users, or any SSH related tool e.g.
+[ansible](http://www.ansible.com/home),
 [fabric](http://www.fabfile.org/),
 [serverspec](http://serverspec.org/) etc.
 
-1. Public DNS Name encodes the Public IP Address, and does not
-   actually ease that much humans in identifying instances.
+* Public DNS Name encodes the Public IP Address. In essence this means
+  that each time an instance is assigned a new IP address, it also
+  gets a new Public DNS name.
 
-2. Accessing an instance becomes complicated, because Public IP
-   Address, once released, cannot be reused. Using fixed IP addresses
-   brings about the need to manage IP address in an address pool, and
-   comes with extra costs.
+* Accessing an instance becomes complicated, because Public IP
+  Address, once released, cannot be reused. Using fixed IP addresses
+  requires IP address management, and comes with extra costs.
 
-3. EC2 instances, with only a Private IP Address, cannot be reached
-   directly from the Internet.
+* EC2 instances, with only a Private IP Address, cannot be reached
+  directly from the Internet.
 
-4. Private DNS names also encode the IP address they map to. On top of
-   that, they cannot be resolved outside the cloud network.
+* Private DNS names also encode the IP address they map to. On top of
+  that, they cannot be resolved outside the cloud network.
 
 ## The Solution
 
-The solutions, offered by
 [aws-ssh-resolver](https://github.com/jarjuk/aws-ssh-resolver)
+addresses the challenges above 
 
-1. extract a name, which can be easily memorized by humans from an EC2
-   instance Tag information, and map that name to the Public DNS Name
-   of the instance
+* It accepts output of
+   [Amazon Command Line Interface](https://aws.amazon.com/cli/) to
+   create
+   [OpenSSH Configuration](http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man5/ssh_config.5?query=ssh_config&sec=5)
+   entries mapping persistent, and human-understandable, EC2 Tag names
+   to mutable EC2 DNS names.
+   
+* Tag-name/DNS name mapping can be updated to reflect current cloud
+   configuration.
 
-2. allow the Tag-name - DNS name mapping to the updated
-
-3. Support
+* Tag-name/DNS mapping together with
     [ProxyCommand with Netcat](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#ProxyCommand_with_Netcat)
-    configuration in OpenSSH allowing users to create a transparent
+    configuration in OpenSSH allows users to create a transparent
     multihop SSH connection to EC2 instances with Private IP Address
     only
-
-4. "Do You Remember"/"It All Starts With One": the Tag-name/DNS name
-   mapping is used also for EC2 instances with Private IP Address only
-
+	
 ## Usage
 
 ### Installation
