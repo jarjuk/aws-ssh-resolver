@@ -91,5 +91,8 @@ namespace "dev" do |ns|
     sh "gem push ./#{gem}-#{version}.gem"
   end
 
+  desc "Finalize delivery"
+  task "full-delivery" => [ "dev:rspec", "rt:release", "rt:push", "dev:build", "dev:install", "rt:snapshot" ]
+
 
 end # ns dev
