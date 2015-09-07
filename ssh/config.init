@@ -1,9 +1,7 @@
 
 
 Host *.compute.internal
-     ProxyCommand ssh myFront1 -F ssh/config nc -q0 %h 22
-
-Host *.compute.amazonaws.com
+     ProxyCommand ssh myFront1 -F ssh/config.aws nc -q0 %h 22
 
 Host *
      user ubuntu
