@@ -31,7 +31,7 @@ EOF
   s.bindir          = 'bin'
   s.executables     = [ "aws-ssh-resolver.rb" ]
 
-  s.required_ruby_version = '~> 2'
+  # s.required_ruby_version = '~> 2'
 
   s.add_runtime_dependency 'thor',              '~>0.18'
   s.add_runtime_dependency 'json'
