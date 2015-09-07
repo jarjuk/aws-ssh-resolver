@@ -54,9 +54,9 @@ namespace "dev" do |ns|
     end
 
     task :cli, :rspec_opts  do |t, args|
-      document_file = "#{document_dir}/cli.txt"
+      document_file = "#{document_dir}/cli/cli.txt"
       args.with_defaults(:rspec_opts => "")
-      sh "bundle exec rspec --format documentation --out #{document_file} spec/cli"
+      sh "bundle exec rspec --format progress --format documentation --out #{document_file} spec/cli"
     end
 
     task :guard do
@@ -69,7 +69,7 @@ namespace "dev" do |ns|
   task :guard => [ "dev:rspec:guard" ]
 
   desc "Run unit tests"  
-  task :rspec => [ "dev:rspec:lib", "dev:rspec:cli" ]
+  task :rspec => [ "dev:rspec:cli" ]
 
   # ------------------------------------------------------------------
   # Build && delivery

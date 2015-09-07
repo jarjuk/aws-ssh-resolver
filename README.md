@@ -23,26 +23,39 @@ SSH, or any related tool [ansible](http://www.ansible.com/home),
 [fabric](http://www.fabfile.org/),
 [serverspec](http://serverspec.org/) etc., user:
 
-1. Accessing an instance becomes complicated, because Public IP
+1. Public DNS Name encodes the Public IP Address, and does not
+   actually ease that much humans in identifying instances.
+
+2. Accessing an instance becomes complicated, because Public IP
    Address, once released, cannot be reused. Using fixed IP addresses
    brings about the need to manage IP address in an address pool, and
    come with extra costs.
-   
-2. Public DNS Name encodes the Public IP Address, and does not
-   actually ease that much humans in identifying instances.
 
-3. Private DNS names also encode the IP address they map to. On top of
-   that, they cannot be resolved outside the cloud network.
-
-4. EC2 instances, with only a Private IP Address, cannot be reached
+3. EC2 instances, with only a Private IP Address, cannot be reached
    directly from the Internet.
+
+4. Private DNS names also encode the IP address they map to. On top of
+   that, they cannot be resolved outside the cloud network.
 
 ## The Solution
 
 The solutions, offered by
 [aws-ssh-resolver](https://github.com/jarjuk/aws-ssh-resolver) 
 
+1. extract a name, which can be easily memorized by humans from an EC2
+   instance Tag information, and map that name to the Public DNS Name
+   of the instance
 
+2. allow the Tag-name - DNS name mapping to the updated
+
+3. Support
+    [ProxyCommand with Netcat](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#ProxyCommand_with_Netcat)
+    configuration in OpenSSH allowing users to create a transparent
+    multihop SSH connection to EC2 instances with Private IP Address
+    only
+	
+4. "Do You Remember"/"It All Starts With One": the Tag-name/DNS name
+   mapping is used also for EC2 instances with Private IP Address only
 
 ## Usage
 
