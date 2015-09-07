@@ -1,4 +1,4 @@
-# aws-ssh-resolver - Resolve AWS EC2 HostNames for OpenSSH - $Release:0.0.1$
+# aws-ssh-resolver - Resolve AWS EC2 HostNames for OpenSSH configuration - $Release:0.0.2-SNAPSHOT$
 
 `aws-ssh-resolver` keeps AWS EC2 HostNames in OpenSSH configuration
 file in sync with Amazon cloud making it easier for a user to use
@@ -19,9 +19,9 @@ OpenSSH, and related tools, on Amazon Platform.
   Address.
 
 Amazon EC2 Instance IP Addressing brings about several challenges for
-SSH, or any related tool [ansible](http://www.ansible.com/home),
+SSH users, or any related tool [ansible](http://www.ansible.com/home),
 [fabric](http://www.fabfile.org/),
-[serverspec](http://serverspec.org/) etc., user:
+[serverspec](http://serverspec.org/) etc.
 
 1. Public DNS Name encodes the Public IP Address, and does not
    actually ease that much humans in identifying instances.
@@ -29,7 +29,7 @@ SSH, or any related tool [ansible](http://www.ansible.com/home),
 2. Accessing an instance becomes complicated, because Public IP
    Address, once released, cannot be reused. Using fixed IP addresses
    brings about the need to manage IP address in an address pool, and
-   come with extra costs.
+   comes with extra costs.
 
 3. EC2 instances, with only a Private IP Address, cannot be reached
    directly from the Internet.
@@ -40,7 +40,7 @@ SSH, or any related tool [ansible](http://www.ansible.com/home),
 ## The Solution
 
 The solutions, offered by
-[aws-ssh-resolver](https://github.com/jarjuk/aws-ssh-resolver) 
+[aws-ssh-resolver](https://github.com/jarjuk/aws-ssh-resolver)
 
 1. extract a name, which can be easily memorized by humans from an EC2
    instance Tag information, and map that name to the Public DNS Name
@@ -53,7 +53,7 @@ The solutions, offered by
     configuration in OpenSSH allowing users to create a transparent
     multihop SSH connection to EC2 instances with Private IP Address
     only
-	
+
 4. "Do You Remember"/"It All Starts With One": the Tag-name/DNS name
    mapping is used also for EC2 instances with Private IP Address only
 
@@ -91,16 +91,17 @@ the result of `aws ec2 describe-instances` to
 **aws-ssh-resolver**. For example
 
 	aws ec2 describe-instances |  bundle exec aws-ssh-resolver.rb resolve
-	
-The command creates host entries into `ssh/config.aws` -file. In a
-host entry, the OpenSSH `host` value is taken from EC2 instance `Name`
-tag.  OpenSSH `HostName` is uses `PublicDnsName`, if is defined,
-otherwise uses `PrivateDnsName`, which is present for all instances.
 
-When network topology changes, i.e. an instance gets a new IP address,
-an instance is terminated, or a new instance is launched, rerun the
-command to update content in `ssh/config.aws` to reflect the new
-situation.
+The command above creates host entries in `ssh/config.aws` -file. In
+this file, `host` values are taken from `Name` tags on EC2 instances,
+and `HostName` values are taken from `PublicDnsName` on EC2
+instances. If `PublicDnsName` is not defined, use `PrivateDnsName`
+instead.
+
+When the network topology changes, i.e. an instance gets a new IP
+address, an instance is terminated, or a new instance is launched,
+rerun the command to update content in `ssh/config.aws` to reflect the
+new situation.
 
 ## An Example
 
@@ -120,18 +121,27 @@ have been created using
 `demo_key`.
 
 
-    +----------------------------------------------------------------+    +----------------------------------------------------------------+
-    | Tags: [ "Name": "myFront" ], Ubuntu 14.04 LTS Trusty           |    | Tags: [ "Name": "myBack1" ], Ubuntu 14.04 LTS Trusty		   |
-    | 52.19.117.227/c2-52-19-117-227.eu-west-1.compute.amazonaws.com |    |    	   	   	   	   	   	   	   	   	   	   	   	   	   	   	   |
-    | 10.0.0.246/ip-10-0-0-246.eu-west-1.compute.internal            |    |10.0.1.242//ip-10-0-1-242.eu-west-1.compute.internal   	   	   |
-	! 10.0.0.0/24                                                    |    |10.0.1.0/24										   		       |
-    | .ssh/demo_key.pub                                              |    |.ssh/demo_key.pub   	   	   	   	   	   	   	   	   	   	   	   |
-    +----------------------------------------------------------------+    +----------------------------------------------------------------+
+    +----------------------------------------------------------------+
+    | Tags: [ "Name": "myFront" ], Ubuntu 14.04 LTS Trusty           |
+    | 52.19.117.227/c2-52-19-117-227.eu-west-1.compute.amazonaws.com |
+    | 10.0.0.246/ip-10-0-0-246.eu-west-1.compute.internal            |
+	! 10.0.0.0/24                                                    |
+    | .ssh/demo_key.pub                                              |
+    +----------------------------------------------------------------+
+
+    +----------------------------------------------------------------+
+    | Tags: [ "Name": "myBack1" ], Ubuntu 14.04 LTS Trusty           |
+    |                                                                |
+    |10.0.1.242//ip-10-0-1-242.eu-west-1.compute.internal            |
+    |10.0.1.0/24                                                     |
+    |.ssh/demo_key.pub                                               |
+    +----------------------------------------------------------------+
+
 
 ### Initial Configuration
 
 We start by creating `ssh/config.aws` configuration file with the
-initial content
+following initial content
 
     Host *.compute.internal ProxyCommand ssh myFront1 -F
          ssh/config.aws nc -q0 %h 22
@@ -177,7 +187,7 @@ information as shown below:
          StrictHostKeyChecking no
          UserKnownHostsFile=/dev/null
          IdentityFile ~/.ssh/demo-key/demo-key
-		 
+
 ### Using OpenSSH Configuration to Access ASW Instances
 
 The configuration in `ssh/configaws` allows us to use tag name
@@ -192,14 +202,17 @@ The instance on subnet `10.0.1.0/24` cannot reached directly, and the
 configuration instructs OpenSSH to use `myFront` as a intermediary to
 create a
 [transparent ssh connection](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts#ProxyCommand_with_Netcat)
-to `myBack1`
+to `myBack1`. This all takes place transparently, and the simple
+command
 
 	ssh myBack1 -F ssh/config.aws
 	Warning: Permanently added 'ec2-52-19-117-227.eu-west-1.compute.amazonaws.com,52.19.117.227' (ECDSA) to the list of known hosts.
 	Warning: Permanently added 'ip-10-0-1-242.eu-west-1.compute.internal' (ECDSA) to the list of known hosts.
 
-Warnings in the command are due to parameters `UserKnownHostsFile` and
-`StrictHostKeyChecking`, which prevent ssh from updating your default
+creates a SSH connection to `myBack1`.
+
+Warnings shown above, are due to parameters `UserKnownHostsFile` and
+`StrictHostKeyChecking`, which prevent ssh from updating the default
 `.ssh/known_hosts` file with the fingerprints of the (temporary)
 instances used in testing.
 
@@ -212,14 +225,10 @@ If the network configuration changes, rerunning
 
 refreshes configuration in `ssh/config.aws`.
 
-The `ssh` command to access instances with `myFront`, and `myBack1`
-`Name` tags does not change, even in a case, when the IP address and
-the corresponding DNS names have changed.
-
 ## Changes
 
 See [RELEASES](RELEASES.md)
 
-## License 
+## License
 
 MIT
