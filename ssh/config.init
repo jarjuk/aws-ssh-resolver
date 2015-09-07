@@ -1,0 +1,13 @@
+
+
+Host *.compute.internal
+     ProxyCommand ssh myFront1 -F ssh/config nc -q0 %h 22
+
+Host *.compute.amazonaws.com
+
+Host *
+     user ubuntu
+     StrictHostKeyChecking no
+     UserKnownHostsFile=/dev/null
+     IdentityFile ~/.ssh/demo-key/demo-key
+
