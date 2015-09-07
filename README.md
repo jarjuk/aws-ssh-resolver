@@ -28,19 +28,19 @@ usage, or any SSH related tool e.g.
 
 * Public DNS Name encodes the Public IP Address. Each time an instance
   is assigned a new IP address, it also gets a new Public DNS name, In
-  essence this means that the task of managing DNS names comparable to
-  the task of managing IP addresses.
+  essence this means that the task of managing DNS names becomes
+  comparable to the task of managing IP addresses.
 
-* Accessing an instance becomes complicated, because Public IP
-  Address, once released, cannot be reused. Using fixed IP addresses
-  requires IP address management, and comes with extra costs.
+* Using an IP address to contact an instance is complicated, because
+  Public IP Address, once released, cannot be reused. Using fixed IP
+  addresses requires keeping track of reserved address, and comes with
+  extra costs.
 
 * EC2 instances, with only a Private IP Address, cannot be reached
   directly from the Internet.
 
 * Private DNS names also encode the IP address they map to. On top of
-  that, Private DNS names cannot be resolved outside the cloud
-  network.
+  that, Private DNS names cannot resolved outside the cloud network.
 
 ## The Solution
 
@@ -98,11 +98,12 @@ command:
 
 	aws ec2 describe-instances |  bundle exec aws-ssh-resolver.rb resolve
 
-The command create extract EC2 Tag/DNS information, and writes
+The command extract EC2 Tag/DNS information, and writes
 `host`/`HostName` configuration entries in `ssh/config.aws` -file.  In
-this file `host` value is taken from `Name` tag on EC2 instance, and
-`HostName` value is taken from `PublicDnsName` on EC2 instances. If
-`PublicDnsName` is not defined, use `PrivateDnsName` instead.
+this file `host` value is taken from `Name` tag on an EC2 instance,
+and `HostName` value is taken from `PublicDnsName` on an EC2
+instance. If `PublicDnsName` is not defined, the command uses
+`PrivateDnsName` instead.
 
 When the network topology changes, i.e. an instance gets a new IP
 address, an instance is terminated, or a new instance is launched,
@@ -116,7 +117,7 @@ reflect the new situation.
 The example uses two Ubuntu EC2 instances with `Name` -tags `myFront`
 and `myBack1`. Instance `myFront` has an internal IP
 `10.0.0.246`. Instances on subnet `10.0.0.0/24` can be reached over
-Internet, and `myFront` has been assigned a public IP `52.19.117.227`
+Internet, and `myFront` has been assigned a public IP `52.19.117.227`,
 and an externally resolvable DNS name
 `c2-52-19-117-227.eu-west-1.compute.amazonaws.com`. Instance `myBack1`
 belongs to private subnet `10.0.1.0/24`, and cannot reached directly
@@ -149,16 +150,22 @@ instances have been created using
 We start by creating `ssh/config.aws` configuration file with the
 following initial content
 
-    Host *.compute.internal ProxyCommand ssh myFront1 -F
-         ssh/config.aws nc -q0 %h 22
-
-    Host *.compute.amazonaws.com
+    Host *.compute.internal 
+	   ProxyCommand ssh myFront1 -F ssh/config.aws nc -q0 %h 22
 
     Host *
          user ubuntu
          StrictHostKeyChecking no
          UserKnownHostsFile=/dev/null
          IdentityFile ~/.ssh/demo-key/demo-key
+
+This configuration instructs OpenSSH to use user name `ubuntu` and SSH
+private key in `~/.ssh/demo-key/demo-key` for all SSH connections.
+
+Amazon assigns DNS names ending with `compute.internal` to map to
+Private IP address. The configuration tells OpenSSH to use `myFront1`
+as a proxy to connect to instances with Private DNS name.
+
 
 ### Read Network Topology, and Update OpenSSH Configuration
 
@@ -186,13 +193,17 @@ information as shown below:
     Host *.compute.internal
          ProxyCommand ssh myFront1 -F ssh/config.aws nc -q0 %h 22
 
-    Host *.compute.amazonaws.com
-
     Host *
          user ubuntu
          StrictHostKeyChecking no
          UserKnownHostsFile=/dev/null
          IdentityFile ~/.ssh/demo-key/demo-key
+		 
+This configuration adds the host definition for `myFront1`, and
+instructs OpenSSH to use a Public DNS name to connect the instance.
+
+The HostName for `myBack1` ends with `compute.internal`, and the
+OpenSSH uses the proxy definition to access it.
 
 ### Using OpenSSH Configuration to Access ASW Instances
 
