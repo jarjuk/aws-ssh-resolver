@@ -1,35 +1,39 @@
 # aws-ssh-resolver - Resolve AWS EC2 HostNames for OpenSSH configuration - $Release:0.0.3-SNAPSHOT$
 
 `aws-ssh-resolver` keeps AWS EC2 HostNames in OpenSSH configuration
-file in sync with Amazon cloud making it easier for a user to use
-OpenSSH, and related tools, on Amazon Platform.
+file in sync with Amazon cloud making it easier for to use OpenSSH,
+and related tools, on Amazon Platform.
 
 ## The Problem
 
 Every EC2 instance on Amazon platform has a Private IP address, and a
-DNS hostname resolving to this address. Private IP cannot be reached
+DNS hostname resolving to this address. A private IP cannot be reached
 directly from the Internet, and the Private DNS name can be resolved
-only on the network that the instance is in. An instance may be
-assigned a Public IP Address, and corresponding Public DNS name.  The
-Public IP is accessible from the Internet, and the Public DNS name is
-resolvable outside the network of the instance.  Public IPs come from
-Amazon's pool of public IP address, and an instance may not reuse the
-IP address, once it is released. For example, stopping, or
-terminating, an instance releases the Public IP Address. See Amazon
+only on the network that the instance is in.
+
+An instance may be assigned a Public IP Address, and a corresponding
+Public DNS name.  The Public IP is accessible from the Internet, and
+the Public DNS name is resolvable outside the network of the instance.
+Public IPs come from Amazon's pool of public IP address, and an
+instance may not reuse the IP address, once it is released and
+returned to the pool. For example, stopping, or terminating, an
+instance releases the Public IP Address. 
+
+See Amazon
 [documentation](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html)
 for more details.
 
 
 Amazon EC2 Instance IP Addressing presents several challenges for SSH
-usage, or any SSH related tool e.g.
+usage, or for the usage any SSH related tool e.g.
 [ansible](http://www.ansible.com/home),
 [fabric](http://www.fabfile.org/),
 [serverspec](http://serverspec.org/) etc.
 
-* Public DNS Name encodes the Public IP Address. Each time an instance
-  is assigned a new IP address, it also gets a new Public DNS name, In
-  essence this means that the task of managing DNS names becomes
-  comparable to the task of managing IP addresses.
+* Amazon Public DNS Names encode Public IP Addresses. Each time an
+  instance is assigned a new IP address, it also gets a new Public DNS
+  name. In essence this means that the task of managing DNS names
+  becomes comparable to the task of managing IP addresses.
 
 * Using an IP address to contact an instance is complicated, because
   Public IP Address, once released, cannot be reused. Using fixed IP
@@ -84,11 +88,10 @@ file `ssh/config.aws` with any fixed configuration.  Running
 **aws-ssh-resolver** updates this file, but does not interfere with
 the content user has entered.
 
-**Notice**: If `ssh/config.aws` -file does not exist, the first
-**aws-ssh-resolver** run creates the initial version of
-`ssh/config.aws` automatically using `ssh/config.init`. This avoids
-the need to check in the mutable `ssh/config.aws` into a version
-nncontrol system.
+**Notice**: The first **aws-ssh-resolver** run creates the initial
+version of `ssh/config.aws` automatically using `ssh/config.init`, if
+`ssh/config.aws` -file does not exist, . This avoids the need to check
+in the mutable `ssh/config.aws` into a version control system.
 
 ### Update OpenSSH Configuration file
 
@@ -98,7 +101,7 @@ command:
 
 	aws ec2 describe-instances |  bundle exec aws-ssh-resolver.rb resolve
 
-The command extract EC2 Tag/DNS information, and writes
+The command extracts EC2 Tag/DNS information, and writes
 `host`/`HostName` configuration entries in `ssh/config.aws` -file.  In
 this file `host` value is taken from `Name` tag on an EC2 instance,
 and `HostName` value is taken from `PublicDnsName` on an EC2
@@ -207,7 +210,7 @@ OpenSSH uses the proxy definition to access it.
 
 ### Using OpenSSH Configuration to Access ASW Instances
 
-The configuration in `ssh/configaws` allows us to use tag name
+The configuration in `ssh/config.aws` allows us to use tag name
 `myFront1` to make a SSH connection to machine with the DNS name
 `c2-52-19-117-227.eu-west-1.compute.amazonaws.com` simply with command
 
