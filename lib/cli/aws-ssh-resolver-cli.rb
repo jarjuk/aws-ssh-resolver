@@ -13,7 +13,7 @@ class Cli < Thor
   DEFAULT_SSH_CONFIG_INIT     = "ssh/config.init"
   MAGIC_START                 = "# +++ aws-ssh-resolver-cli update start here +++"
   MAGIC_END                   = "# +++ aws-ssh-resolver-cli update end here +++"
-  DEFAULT_DESCRIBE_INSTANCES  = "aws ec2 describe-instances --filters 'Name=tag-key,Values=Name'"
+  DEFAULT_DESCRIBE_INSTANCES  = "aws ec2 describe-instances --filters 'Name=instance-state-name,Values=running' 'Name=tag-key,Values=Name'"
   DEFAULT_HOST_TAG            = "Name"
 
   # ------------------------------------------------------------------
