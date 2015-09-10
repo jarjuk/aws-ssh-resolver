@@ -1,4 +1,4 @@
-## 0.0.3-SNAPSHOT/20150907-22:38:32
+## 0.0.3/20150910-09:27:50
 
 * c.f. [blog post](https://jarjuk.wordpress.com/2015/09/08/using-openssh-on-aws-platform/#more-273)
 
