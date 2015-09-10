@@ -6,27 +6,9 @@ and related tools, on Amazon Platform.
 
 ## The Problem
 
-Every EC2 instance on Amazon platform has a Private IP address, and a
-DNS hostname resolving to this address. A private IP cannot be reached
-directly from the Internet, and the Private DNS name can be resolved
-only on the network that the instance is in.
-
-An instance may be assigned a Public IP Address, and a corresponding
-Public DNS name.  The Public IP is accessible from the Internet, and
-the Public DNS name is resolvable outside the network of the instance.
-Public IPs come from Amazon's pool of public IP address, and an
-instance may not reuse the IP address, once it is released and
-returned to the pool. For example, stopping, or terminating, an
-instance releases the Public IP Address. 
-
-See Amazon
-[documentation](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html)
-for more details.
-
-
-Amazon EC2 Instance IP Addressing presents several challenges for SSH
-usage, or for the usage any SSH related tool e.g.
-[ansible](http://www.ansible.com/home),
+[Amazon EC2 Instance IP Addressing](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html)
+sets several challenges for SSH usage, and for any tool using SSH
+connections e.g.  [ansible](http://www.ansible.com/home),
 [fabric](http://www.fabfile.org/),
 [serverspec](http://serverspec.org/) etc.
 
@@ -66,7 +48,10 @@ addresses the challenges above
     configuration in OpenSSH allows users to create a transparent
     multihop SSH connection to EC2 instances with Private IP Address
     only
-	
+
+For more background information, see
+[blog post](https://jarjuk.wordpress.com/2015/09/08/using-openssh-on-aws-platform/#more-273https://jarjuk.wordpress.com/2015/09/08/using-openssh-on-aws-platform/#more-273).
+
 ## Usage
 
 ### Installation
