@@ -1,0 +1,4 @@
+2015-09-10  jj  <jj@horsti>
+
+	* lib/cli/aws-ssh-resolver-cli.rb (Cli): DEFAULT_DESCRIBE_INSTANCES added filter for instance-state-name
+

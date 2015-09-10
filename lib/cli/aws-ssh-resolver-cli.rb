@@ -13,7 +13,7 @@ class Cli < Thor
   DEFAULT_SSH_CONFIG_INIT     = "ssh/config.init"
   MAGIC_START                 = "# +++ aws-ssh-resolver-cli update start here +++"
   MAGIC_END                   = "# +++ aws-ssh-resolver-cli update end here +++"
-  DEFAULT_DESCRIBE_INSTANCES  = "aws ec2 describe-instances --filters 'Name=tag-key,Values=Name'"
+  DEFAULT_DESCRIBE_INSTANCES  = "aws ec2 describe-instances --filters 'Name=instance-state-name,Values=running' 'Name=tag-key,Values=Name'"
   DEFAULT_HOST_TAG            = "Name"
 
   # ------------------------------------------------------------------
@@ -22,6 +22,17 @@ class Cli < Thor
   def initialize(*args)
     super
     @logger = getLogger( PROGNAME, options )
+  end
+  
+  # ------------------------------------------------------------------
+  # version 
+  # http://stackoverflow.com/questions/22809972/adding-a-version-option-to-a-ruby-thor-cli
+
+  map %w[--version -v] => :__print_version
+
+  desc "--version, -v", "print the version"
+  def __print_version
+    puts File.readlines( File.join File.dirname(__FILE__), "../../VERSION" ).join( " " )
   end
 
   # ------------------------------------------------------------------
