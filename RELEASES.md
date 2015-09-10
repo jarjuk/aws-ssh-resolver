@@ -1,4 +1,4 @@
-## 0.0.4-SNAPSHOT/20150910-09:27:56
+## 0.0.4/20150910-22:20:17
 
 * command aws use `aws ec2  describe-instances --filters "Name=instance-state-name,Values=running"`
 
