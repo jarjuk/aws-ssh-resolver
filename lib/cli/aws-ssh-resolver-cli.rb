@@ -23,6 +23,17 @@ class Cli < Thor
     super
     @logger = getLogger( PROGNAME, options )
   end
+  
+  # ------------------------------------------------------------------
+  # version 
+  # http://stackoverflow.com/questions/22809972/adding-a-version-option-to-a-ruby-thor-cli
+
+  map %w[--version -v] => :__print_version
+
+  desc "--version, -v", "print the version"
+  def __print_version
+    puts File.readlines( File.join File.dirname(__FILE__), "../../VERSION" ).join( " " )
+  end
 
   # ------------------------------------------------------------------
   # make two thor tasks share options?
